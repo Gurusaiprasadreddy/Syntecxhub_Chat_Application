@@ -5,7 +5,7 @@ const Home = () => {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50">
       <div className="text-center p-8 bg-white shadow-lg rounded-xl max-w-md w-full mx-4">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">Syntecxhub Chat</h1>
+        <h1 className="text-3xl font-bold text-blue-600 mb-4">Chat Application</h1>
         <p className="text-gray-600 mb-8">
           Welcome to the real-time chat application!
         </p>

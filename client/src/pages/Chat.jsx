@@ -55,7 +55,7 @@ const Chat = () => {
             </svg>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white leading-tight">Syntecxhub Chat</h1>
+            <h1 className="text-xl font-bold text-white leading-tight">Chat Application</h1>
             <p className="text-xs text-blue-100 hidden sm:block">Welcome, {user?.username}!</p>
           </div>
         </div>
