@@ -20,16 +20,15 @@ This is a real-time chat application built for the Syntecxhub internship (Task 4
 <summary>Click to view screenshots</summary>
 
 ### 1. Registration / Login
-![Login Screen](placeholder-link-to-login-image)
+![Login Screen](screenshots/screenshot-1.png)
+![Register Screen](screenshots/screenshot-2.png)
 
 ### 2. Chat Interface (Desktop)
-![Chat Interface](placeholder-link-to-chat-image)
+![Chat Empty Interface](screenshots/screenshot-3.png)
+![Create Room Modal](screenshots/screenshot-4.png)
 
 ### 3. Real-Time Messaging & Typing Indicator
-![Typing Indicator](placeholder-link-to-typing-image)
-
-### 4. Mobile View
-![Mobile View](placeholder-link-to-mobile-image)
+![Typing Indicator & Chat](screenshots/screenshot-5.png)
 
 </details>
 
