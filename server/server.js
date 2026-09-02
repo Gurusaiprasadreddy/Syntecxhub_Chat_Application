@@ -25,6 +25,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/rooms', require('./routes/roomRoutes'));
+app.use('/api/messages', require('./routes/messageRoutes'));
 
 // Initialize Socket.io handler
 require('./socket/socketHandler')(io);

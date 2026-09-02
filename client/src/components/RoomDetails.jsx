@@ -1,11 +1,73 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { joinRoom, leaveRoom, deleteRoom } from '../services/api';
+import { joinRoom, leaveRoom, deleteRoom, getMessages } from '../services/api';
+import { useSocket } from '../hooks/useSocket';
+import MessageList from './MessageList';
+import MessageInput from './MessageInput';
 
 const RoomDetails = ({ room, onUpdateRoom, onDeleteRoom }) => {
-  const { user } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [messages, setMessages] = useState([]);
+  
+  const getSocket = useSocket(token);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadRoomData = async () => {
+      if (!room) return;
+      
+      const isMember = room.members.some(member => member._id === user._id);
+      if (!isMember) {
+        setMessages([]);
+        return;
+      }
+
+      try {
+        const res = await getMessages(room._id);
+        if (active) {
+          setMessages(res.data.messages);
+          
+          // Connect to socket room
+          const socket = getSocket();
+          if (socket) {
+            socket.emit('join_room', { roomId: room._id });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load messages', err);
+      }
+    };
+
+    loadRoomData();
+
+    return () => {
+      active = false;
+      const socket = getSocket();
+      if (socket && room) {
+        socket.emit('leave_room', { roomId: room._id });
+      }
+    };
+  }, [room, user._id, getSocket]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !room) return;
+
+    const handleReceiveMessage = (newMessage) => {
+      if (newMessage.room === room._id) {
+        setMessages(prev => [...prev, newMessage]);
+      }
+    };
+
+    socket.on('receive_message', handleReceiveMessage);
+
+    return () => {
+      socket.off('receive_message', handleReceiveMessage);
+    };
+  }, [room, getSocket]);
 
   if (!room) {
     return (
@@ -60,86 +122,87 @@ const RoomDetails = ({ room, onUpdateRoom, onDeleteRoom }) => {
     }
   };
 
+  const handleSendMessage = (messageText) => {
+    const socket = getSocket();
+    if (socket && isMember) {
+      socket.emit('send_message', { roomId: room._id, message: messageText });
+    }
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-white relative">
-      <div className="border-b border-gray-200 p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800"># {room.name}</h2>
-            <p className="text-gray-600 mt-1">{room.description || 'No description provided.'}</p>
-            <p className="text-xs text-gray-400 mt-2">
-              Created by {room.createdBy.username} on {new Date(room.createdAt).toLocaleDateString()}
-            </p>
-          </div>
+    <div className="flex-1 flex flex-col h-full bg-gray-50 relative">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 p-4 shrink-0 shadow-sm z-10 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <span className="text-gray-400 mr-2">#</span>
+            {room.name}
+            <span className="ml-3 text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {room.members.length} member{room.members.length !== 1 && 's'}
+            </span>
+          </h2>
+          {room.description && <p className="text-sm text-gray-500 mt-1">{room.description}</p>}
+        </div>
 
-          <div className="flex space-x-2">
-            {!isMember && (
-              <button
-                onClick={handleJoin}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium text-sm transition"
-              >
-                Join Room
-              </button>
-            )}
+        <div className="flex space-x-2">
+          {!isMember && (
+            <button
+              onClick={handleJoin}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium text-sm transition"
+            >
+              Join Room
+            </button>
+          )}
+          {isMember && !isCreator && (
+            <button
+              onClick={handleLeave}
+              disabled={loading}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1.5 rounded text-sm transition"
+            >
+              Leave
+            </button>
+          )}
+          {isCreator && (
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded text-sm transition"
+              title="Only the creator can delete the room"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {error && (
+        <div className="bg-red-50 border-b border-red-200 text-red-600 px-4 py-2 text-sm text-center shrink-0">
+          {error}
+        </div>
+      )}
 
-            {isMember && !isCreator && (
-              <button
-                onClick={handleLeave}
-                disabled={loading}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium text-sm transition"
-              >
-                Leave Room
-              </button>
-            )}
-
-            {isCreator && (
-              <button
-                onClick={handleDelete}
-                disabled={loading}
-                className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-md font-medium text-sm transition"
-                title="Only the creator can delete the room"
-              >
-                Delete
-              </button>
-            )}
+      {/* Messages area */}
+      {!isMember ? (
+        <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
+          <div className="text-center bg-white p-8 rounded-lg shadow-sm border border-gray-100">
+            <p className="text-lg font-medium text-gray-700 mb-2">You are not a member</p>
+            <p className="mb-4">You must join this room to see messages and participate.</p>
+            <button
+              onClick={handleJoin}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition"
+            >
+              Join {room.name}
+            </button>
           </div>
         </div>
-        
-        {error && <div className="mt-4 text-sm text-red-600">{error}</div>}
-      </div>
-
-      <div className="p-6 flex-1 overflow-y-auto bg-gray-50 flex flex-col">
-        {!isMember ? (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            <p>You must join this room to participate.</p>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col">
-            <div className="mb-8">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                Members ({room.members.length})
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {room.members.map(member => (
-                  <div key={member._id} className="bg-white border border-gray-200 rounded-full px-3 py-1 flex items-center text-sm shadow-sm">
-                    <span className={`w-2 h-2 rounded-full mr-2 ${member.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                    <span className="font-medium text-gray-700">{member.username}</span>
-                    {member._id === room.createdBy._id && <span className="ml-1 text-xs text-blue-500">(Admin)</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-auto border-t border-gray-200 pt-6">
-              <div className="text-center p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
-                <p className="text-gray-500 mb-2">No messages yet</p>
-                <p className="text-sm text-blue-600">Real-time messaging will be implemented in Phase 6.</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      ) : (
+        <>
+          <MessageList messages={messages} currentUserId={user._id} />
+          <MessageInput onSendMessage={handleSendMessage} disabled={!isMember} />
+        </>
+      )}
     </div>
   );
 };

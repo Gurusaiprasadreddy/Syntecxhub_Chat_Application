@@ -28,4 +28,6 @@ export const joinRoom = (roomId) => api.post(`/rooms/${roomId}/join`);
 export const leaveRoom = (roomId) => api.post(`/rooms/${roomId}/leave`);
 export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);
 
+export const getMessages = (roomId) => api.get(`/messages/${roomId}`);
+
 export default api;
