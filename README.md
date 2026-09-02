@@ -53,6 +53,54 @@ This is a real-time chat application built for the Syntecxhub internship (Task 4
 - JWT (JSON Web Tokens)
 - bcryptjs
 
+## Project Architecture
+
+```
+User
+  ↓
+React/Vite Frontend
+  ↓
+JWT Authentication
+  ↓
+Express REST API
+  ↓
+Node.js Backend
+  ↓
+MongoDB Atlas
+```
+
+**Real-Time Data Flow:**
+```
+React Frontend
+  ↕
+Socket.io
+  ↕
+Node.js / Socket.io Server
+  ↓
+MongoDB
+```
+The application uses REST APIs for state-heavy and security-critical operations (Auth, Room creation). It leverages Socket.io for low-latency, real-time events (Messages, Presence, Typing Indicators). MongoDB persists all user and chat history data so it is not lost when sessions end.
+
+## Feature Demonstration
+
+### Authentication
+Users can register new accounts and securely login using bcrypt-hashed passwords. Stateless JSON Web Tokens (JWT) are used for protecting routes and APIs.
+
+### Chat Rooms
+Users can dynamically create, view, join, leave, and delete custom chat rooms.
+
+### Real-Time Messaging
+Powered by Socket.io, users instantly receive messages from others within the same room without needing to refresh the page.
+
+### Presence
+The application monitors WebSocket connections to display accurate "Online" or "Offline" status for users in real time.
+
+### Typing Indicator
+Visual typing indicators broadcast when a user is actively drafting a message, debounced to prevent network spam.
+
+### Persistent History
+All messages sent via WebSockets are simultaneously persisted to MongoDB, ensuring chat history is completely restored if the user leaves and rejoins.
+
 ## Project Structure
 ```
 Syntecxhub_Chat_Application/
@@ -101,7 +149,7 @@ Create a `.env` file in the **server** directory with the following variables:
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
-CLIENT_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5173
 ```
 
 Create a `.env` file in the **client** directory with the following variables:
