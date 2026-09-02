@@ -13,6 +13,26 @@ This is a real-time chat application built for the Syntecxhub internship (Task 4
 - **Typing indicators** to see when others are drafting a message
 - **Responsive interface** that adapts beautifully to both desktop and mobile devices
 
+## Screenshots
+*(Add your project screenshots here)*
+
+<details>
+<summary>Click to view screenshots</summary>
+
+### 1. Registration / Login
+![Login Screen](placeholder-link-to-login-image)
+
+### 2. Chat Interface (Desktop)
+![Chat Interface](placeholder-link-to-chat-image)
+
+### 3. Real-Time Messaging & Typing Indicator
+![Typing Indicator](placeholder-link-to-typing-image)
+
+### 4. Mobile View
+![Mobile View](placeholder-link-to-mobile-image)
+
+</details>
+
 ## Tech Stack
 **Frontend:**
 - React
