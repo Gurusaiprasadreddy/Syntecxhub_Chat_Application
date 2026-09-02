@@ -1,11 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-const MessageInput = ({ onSendMessage, disabled }) => {
+const MessageInput = ({ onSendMessage, onTypingStart, onTypingStop, disabled }) => {
   const [message, setMessage] = useState('');
+  const typingTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleChange = (e) => {
+    setMessage(e.target.value);
+    
+    if (!disabled && onTypingStart && onTypingStop) {
+      onTypingStart();
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        onTypingStop();
+      }, 1500); // Stop typing after 1.5s of inactivity
+    }
+  };
 
   const handleSend = (e) => {
     if (e) e.preventDefault();
     if (!message.trim() || disabled) return;
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    if (onTypingStop) onTypingStop();
     
     onSendMessage(message);
     setMessage('');
@@ -23,7 +53,7 @@ const MessageInput = ({ onSendMessage, disabled }) => {
       <form onSubmit={handleSend} className="flex space-x-2">
         <textarea
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder="Type a message... (Shift+Enter for newline)"
