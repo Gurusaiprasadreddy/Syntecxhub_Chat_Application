@@ -21,4 +21,11 @@ api.interceptors.request.use(
   }
 );
 
+export const getRooms = () => api.get('/rooms');
+export const createRoom = (data) => api.post('/rooms', data);
+export const getRoom = (roomId) => api.get(`/rooms/${roomId}`);
+export const joinRoom = (roomId) => api.post(`/rooms/${roomId}/join`);
+export const leaveRoom = (roomId) => api.post(`/rooms/${roomId}/leave`);
+export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);
+
 export default api;
